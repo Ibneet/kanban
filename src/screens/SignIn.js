@@ -15,11 +15,12 @@ export default class SigninScreen extends Component {
     }
 
     signinUser = (email, password) => {
+      var self = this
         firebase
           .auth()
           .signInWithEmailAndPassword(email, password)
           .then( () => {
-            this.props.navigation.dispatch(
+            self.props.navigation.dispatch(
                 StackActions.replace('Home')
             )
           })

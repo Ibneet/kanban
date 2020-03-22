@@ -16,6 +16,7 @@ export default class SignupScreen extends Component {
   }
 
   signupUser = (name, email, password) => {
+    var self = this
     firebase
       .auth()
       .createUserWithEmailAndPassword(email, password)
@@ -25,8 +26,8 @@ export default class SignupScreen extends Component {
             displayName: name
           })
           .then( () => {
-            this.props.navigation.dispatch(
-              StackActions.replace('Home')
+            self.props.navigation.dispatch(
+              StackActions.replace('Kanban')
           )
           })
       })

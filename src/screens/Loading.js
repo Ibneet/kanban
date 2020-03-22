@@ -4,15 +4,16 @@ import * as firebase from 'firebase';
 import { StackActions } from '@react-navigation/native';
 
 export default class LoadingScreen extends Component {
-
+    
     componentDidMount() {
+        var self = this
         firebase.auth().onAuthStateChanged( (authenticate) => {
             if(authenticate) {
-                this.props.navigation.dispatch(
-                    StackActions.replace('Home')
+                self.props.navigation.dispatch(
+                    StackActions.replace('Kanban')
                 )
             }else{
-                this.props.navigation.dispatch(
+                self.props.navigation.dispatch(
                     StackActions.replace('SignIn')
                 )
             }
