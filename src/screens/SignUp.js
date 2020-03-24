@@ -12,12 +12,19 @@ export default class SignupScreen extends Component {
           email: "",
           password: "",
           name:"",
+          isLoading: false
       }
   }
 
   signupUser = (name, email, password) => {
     var self = this
-    firebase
+    if(this.state.email === '' && this.state.password === '' && this.state.name === '') {
+      Alert.alert('Enter details to signup!')
+    }else {
+      this.setState({
+        isLoading: true,
+      })
+      firebase
       .auth()
       .createUserWithEmailAndPassword(email, password)
       .then( authenticate => {
@@ -35,6 +42,7 @@ export default class SignupScreen extends Component {
         alert(error.message)
       }
       )
+    }
   }
 
   render(){

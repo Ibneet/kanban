@@ -7,7 +7,7 @@ import LoadingScreen from '../screens/Loading';
 import { Icon } from 'native-base';
 import * as firebase from 'firebase';
 import { StackActions } from '@react-navigation/native';
-import {  TouchableOpacity } from 'react-native';
+import {  TouchableOpacity, Text } from 'react-native';
 
 const Stack = createStackNavigator();
 
@@ -69,7 +69,10 @@ class MyStack extends Component {
               <TouchableOpacity onPress={() => {this.signOutUser()}}>
                <Icon name='log-out' size={32}/>
               </TouchableOpacity>
-          ),
+            ),
+            // headerLeft: () => (
+            //   <Text>{this.state.name}</Text>
+            // )
             }}
         />
         </Stack.Navigator>

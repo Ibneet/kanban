@@ -1,38 +1,186 @@
 import React from 'react';
-import { Text, View, StyleSheet, KeyboardAvoidingView, FlatList } from 'react-native';
-import { Input, Card, Button, Icon } from 'native-base'
+import { Text, View, StyleSheet, FlatList, ActivityIndicator, TouchableOpacity, Alert } from 'react-native';
+import { Card } from 'native-base'
+import * as firebase from 'firebase'
+import { Entypo } from '@expo/vector-icons'
 
-export default class DetailsScreen extends React.Component {
+export default class BacklogScreen extends React.Component {
+
+  constructor(props){
+    super(props);
+    this.state = {
+      data: [],
+      isLoading: false,
+      isListEmpty: false,
+      uid: firebase.auth().currentUser.uid 
+    }
+  }
+  
+  UNSAFE_componentWillMount() {
+    this.getBacklog()
+  }
+
+  getBacklog = () => {
+    let self = this
+    // console.log(this.state.uid)
+    let backlogRef = firebase.database().ref(`${this.state.uid}`+'/backlog_list')
+    backlogRef.on('value',dataSnapshot => {
+      if(dataSnapshot.val()) {
+        let backlogResult = Object.values(dataSnapshot.val());
+        console.log(backlogResult)
+        let backlogKey = Object.keys(dataSnapshot.val());
+
+        backlogKey.forEach((value, key) => {
+          backlogResult[key]['key'] = value;
+        })
+        self.setState({
+          data: backlogResult,
+          isListEmpty: false,
+        })
+      }else{
+        self.setState({isListEmpty: true})
+      }
+      self.setState({isLoading: false})
+    })
+  }
+
+  actions = (key,activity) => {
+    Alert.alert(
+      'What you want to do with', `${activity}`,
+      [
+        {text: 'Cancel', onPress:() => console.log
+        ('Cancelled pressed')
+        },
+        {text: 'Delete', onPress:async () => {
+          this.deleteBacklog(key,activity)
+          }
+        },
+        {text: 'Move', onPress:async () => {
+          this.moveBacklog(key,activity)
+          }
+        }
+      ],
+      {cancelable: true}
+    )
+  }
+
+  deleteBacklog = (key,activity) => {
+    Alert.alert(
+      'Delete this activity?',
+      `${activity}`,
+      [
+        {text: 'Cancel', onPress:() => console.log
+        ('Cancelled pressed')
+        },
+        {text: 'OK', onPress:async () => {
+          let backlogRef = firebase.database().ref(`${this.state.uid}`+'/backlog_list').child(key);
+          await  backlogRef.remove()
+        }}
+      ],
+      {cancelable: true}
+    )
+  }
+
+  moveBacklog = (key,activity) => {    
+    let oldRef = firebase.database().ref(`${this.state.uid}`+'/backlog_list').child(key);
+    Alert.alert(
+      'Where to move activity?',
+      `${activity}`,
+      [
+        {text: 'Done', onPress:async () => {
+          let newRef = firebase.database().ref(`${this.state.uid}`+'/done_list').child(key);
+          await  oldRef.once('value', function(snap)  {
+            newRef.set( snap.val(), function(error) {
+                 if( !error ) {  oldRef.remove(); }
+                 else if( typeof(console) !== 'undefined' && console.error ) {  console.error(error); }
+            });
+          });
+        }},
+        {text: 'Doing', onPress:async () => {
+          let newRef = firebase.database().ref(`${this.state.uid}`+'/doing_list').child(key);
+          await  oldRef.once('value', function(snap)  {
+            newRef.set( snap.val(), function(error) {
+            if( !error ) {  oldRef.remove(); }
+                 else if( typeof(console) !== 'undefined' && console.error ) {  console.error(error); }
+            });
+          });
+        }},
+        {text: 'Today', onPress:async () => {
+          let newRef = firebase.database().ref(`${this.state.uid}`+'/today_list').child(key);
+          await  oldRef.once('value', function(snap)  {
+            newRef.set( snap.val(), function(error) {
+                 if( !error ) {  oldRef.remove(); }
+                 else if( typeof(console) !== 'undefined' && console.error ) {  console.error(error); }
+            });
+          });
+        }}
+      ],
+      {cancelable: true}
+    )
+  }
+
   render(){ 
-    const list = this.props.route.params?.list ?? []
+    // this.state = { 
+    //   uid: firebase.auth().currentUser.uid 
+    // } 
+    // console.log(this.state.uid)
+    if(this.state.isLoading) {
+      return(
+        <View style={styles.container}>
+          <ActivityIndicator size='large' color='black' />
+        </View>
+      )
+    }else if(this.state.isListEmpty){
+      return(
+        <View style={styles.container}>
+          <Entypo style={{alignSelf:'center'}} name='plus' size={35}/>
+          <Text style={{textAlign:'center'}}>No backlog</Text>
+          <TouchableOpacity
+          onPress={() => {
+            this.props.navigation.navigate('AddCard',{
+              backlog: true,
+              uid: this.state.uid
+            })
+          }}
+          style={styles.floatButton}
+          >
+            <Entypo name='plus' size={35} color='white'/>
+          </TouchableOpacity>
+        </View>
+      )
+    }
     return (
-      <KeyboardAvoidingView 
-      behavior='padding'
-      enabled
-      style={styles.container}>
-        <View style={{flex:1}}>
+      <View style={styles.container}>
         <FlatList
-        data={list}
+        data={this.state.data}
         inverted
-        keyExtractor={(item,index) => item.time.toString()}
         renderItem={({item}) => (
-          <Card>
+          <Card style={styles.listItem}>
             <Text>{item.text}</Text>
-            <Text>{item.dueDate}</Text>
             <Text>{new Date(item.time).toLocaleDateString}</Text>
+            <TouchableOpacity
+              onPress={() => {
+              this.actions(item.key,item.text)
+              }}
+              style={styles.menuButton}
+            >
+            <Entypo name='menu' size={10} color='white'/>
+            </TouchableOpacity>
           </Card>
         )}
         />
-        
-        </View>
-        <View>
-        <Button full rounded icon onPress={() => this.props.navigation.navigate('AddCard', {
-          backlog: true,
-        })}>
-          <Text>New Card?</Text>
-        </Button>
-        </View>
-      </KeyboardAvoidingView>
+        <TouchableOpacity
+          onPress={() => {
+            this.props.navigation.navigate('AddCard',{
+              backlog:true,
+              uid: this.state.uid
+            })
+          }}
+          style={styles.floatButton}
+          >
+            <Entypo name='plus' size={35} color='white'/>
+        </TouchableOpacity>
+      </View>
     );
 }
 }
@@ -43,4 +191,34 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+  listItem: {
+    flexDirection: 'row',
+    padding: 20
+  },
+  floatButton: {
+    borderWidth: 1,
+    borderColor: 'rgba(0,0,0,0.2)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: 60,
+    position: 'absolute',
+    bottom: 10,
+    right: 10,
+    height: 60,
+    backgroundColor: 'black',
+    borderRadius: 100
+  },
+  menuButton: {
+    borderWidth: 1,
+    borderColor: 'rgba(0,0,0,0.2)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: 20,
+    position: 'absolute',
+    bottom: 1,
+    right: 1,
+    height: 20,
+    backgroundColor: 'black',
+    borderRadius: 20
+  }
 });
