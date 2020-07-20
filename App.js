@@ -6,14 +6,14 @@ import Navigation from './src/Navigation/Navigation';
 import * as firebase from 'firebase'
 
 const firebaseConfig = {
-  apiKey: "AIzaSyDgZDaLgpHr3eh7zHF02E9OzM4cR7nigoc",
-  authDomain: "kanban-54bfb.firebaseapp.com",
-  databaseURL: "https://kanban-54bfb.firebaseio.com",
-  projectId: "kanban-54bfb",
-  storageBucket: "kanban-54bfb.appspot.com",
-  messagingSenderId: "895763176543",
-  appId: "1:895763176543:web:db1df2c0573c4b9cfa0fea",
-  measurementId: "G-XXB8ZNDBC3"
+  apiKey: "***************",
+  authDomain: "************",
+  databaseURL: "************",
+  projectId: "************",
+  storageBucket: "************",
+  messagingSenderId: "************",
+  appId: "************",
+  measurementId: "************"
 };
 
 firebase.initializeApp(firebaseConfig);
